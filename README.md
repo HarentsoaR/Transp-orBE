@@ -1,69 +1,72 @@
-# Transport backend
+# Transport Coop – Full Stack Setup
 
-Express + Prisma API for the transport app with PostgreSQL and Elasticsearch-backed backoffice search.
+Local setup for the cooperative transport app (Next.js frontend + Express/Prisma backend) with Docker for infra.
 
-## Quick start
+## Prerequisites
+- Docker + Docker Compose
+- Node.js 18+ and npm
 
+## 1) Start infrastructure (Postgres + Elasticsearch)
+From `backend/`:
 ```bash
-cd backend
 cp .env.example .env
-docker compose up -d           # start Postgres + Elasticsearch (single node, no auth)
-npm install
-npx prisma migrate dev --name init
-npm run seed                   # creates admin + permissions + sample bus/driver/route/trip
-npm run dev                    # starts http://localhost:${PORT:-4000}
+# Update DATABASE_URL to match docker compose (transport/transport)
+# DATABASE_URL=postgresql://transport:transport@localhost:5432/transport
+
+docker compose up -d   # starts Postgres on 5432 and Elasticsearch on 9200
 ```
 
-Health check: `GET /health`
+## 2) Install & migrate backend
+```bash
+cd backend
+npm install
+npx prisma migrate dev --name init
+npm run build   # optional, validates TS
+```
 
-## Environment
+### Seed data
+Pick one:
+- Minimal seed with admin + sample records:
+  ```bash
+  npm run seed
+  # admin user: admin@transport.local / Admin123!
+  ```
+- Full Madagascar sample set (20 trips, 7 buses/drivers, routes, 16-seat fleet):
+  ```bash
+  npx ts-node scripts/seedMadagascar.ts
+  ```
 
-- `DATABASE_URL`: PostgreSQL connection string.
-- `JWT_SECRET`: long random string.
-- `ELASTICSEARCH_NODE`: ex. `http://localhost:9200` (required for search endpoints).
-- `ELASTICSEARCH_USERNAME` / `ELASTICSEARCH_PASSWORD`: only if you enable xpack security.
+Start backend:
+```bash
+npm run dev   # http://localhost:4000
+```
 
-## Main endpoints
+## 3) Configure & run frontend
+```bash
+cd Cooperative-app-front-end-main
+cat > .env.local <<'EOF'
+NEXT_PUBLIC_API_BASE=http://localhost:4000/api
+EOF
 
-- `POST /api/auth/register` – traveler self-signup (creates Traveler + User).
-- `POST /api/auth/login` – returns JWT + profile permissions.
-- `GET /api/routes` – public routes list. `GET /api/routes/:id`
-- `GET /api/trips?origin=...&destination=...&date=YYYY-MM-DD` – public trip search. `GET /api/trips/:id`
-- `POST /api/reservations` – traveler reserves seat (auth). Supports `travelerInfo` for counter bookings.
-- `GET /api/reservations/me` – traveler history (auth).
-- `POST /api/reservations/:id/cancel` – cancel and release seat (auth).
-- `POST /api/reservations/:id/check-in` – driver marks boarded (permission `driver.operations`).
-- `GET /api/drivers/:driverId/trips` – driver schedule (auth).
+npm install
+npm run dev   # http://localhost:3000
+```
 
-Backoffice (all require JWT + permissions):
+## Helpful routes
+- Front: `http://localhost:3000/cooperative_management`
+  - Auth: `/auth`
+  - Planning/History: `/history`
+  - Travelers, Drivers, Vehicles, Reservations: their respective tabs
+- API health: `GET http://localhost:4000/health` (if implemented)
 
-- `/api/admin/buses` CRUD (`transport.buses.manage`)
-- `/api/admin/drivers` CRUD (`transport.drivers.manage`)
-- `/api/admin/routes` CRUD (`transport.routes.manage`)
-- `/api/admin/trips` CRUD + status (`transport.trips.manage`)
-- `/api/admin/trips/:tripId/occupancy` (`transport.reservations.manage`)
+## Admin permissions
+The seed script creates the `ADMIN` profile with permissions:
+- transport.buses.manage
+- transport.drivers.manage
+- transport.routes.manage
+- transport.trips.manage
+- transport.reservations.manage
+- driver.operations
+- search.manage
 
-Search (Elasticsearch + Lucene query syntax):
-
-- `GET /api/search?q=type:trip AND route:Antananarivo` – backoffice search (permission `search.manage` not required for GET but API is behind `/api/search` route auth).
-- `POST /api/search/reindex` – bulk index Postgres data into Elasticsearch (`search.manage`).
-
-### Seed admin & sample data
-
-- `npm run seed` creates:
-  - Permissions: `transport.*.manage`, `driver.operations`, `search.manage`
-  - Profile `ADMIN` with all permissions
-  - Admin user: `admin@transport.local` / `Admin123!`
-  - Sample bus, driver, route, and one trip (tomorrow) for quick UI testing.
-
-## Data model highlights (Prisma)
-
-- Core: `User`, `Profile`, `Permission`, `Traveler`, `Driver`, `Bus`, `Route`, `Trip`, `Reservation`.
-- Audit: `AuditLog`, `LoginLog`.
-- Constraints: unique user email, unique seat per trip, traveler-user 1:1, trip availableSeats decremented on booking and restored on cancel.
-
-## Notes
-
-- Permission codes used in routes: `transport.*.manage`, `driver.operations`, `search.manage`. Create Profiles/Permissions accordingly (seed or Prisma scripts).
-- Elasticsearch in `docker-compose.yml` runs without security for local dev; add auth + TLS in production.
-- Adjust `env.PORT` to avoid clashing with Next.js (default 4000).
+Use the admin credentials above to access backoffice screens.
