@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import { ReservationService } from "./reservation.service";
+import { logAction } from "../../utils/audit";
 
 export const ReservationController = {
   create: async (req: Request, res: Response) => {
     try {
       const reservation = await ReservationService.create(req.body, req.user?.id);
+      await logAction(req, { tableName: "reservation", action: "create", entityId: (reservation as any)?.id });
       return res.status(201).json(reservation);
     } catch (error: any) {
       return res.status(400).json({ message: error.message ?? "Unable to create reservation" });
@@ -20,6 +22,7 @@ export const ReservationController = {
   cancel: async (req: Request, res: Response) => {
     try {
       const reservation = await ReservationService.cancel(req.params.id, req.user?.id);
+      await logAction(req, { tableName: "reservation", action: "cancel", entityId: reservation.id });
       return res.json(reservation);
     } catch (error: any) {
       return res.status(400).json({ message: error.message ?? "Unable to cancel reservation" });
@@ -29,6 +32,7 @@ export const ReservationController = {
   checkIn: async (req: Request, res: Response) => {
     try {
       const reservation = await ReservationService.checkIn(req.params.id);
+      await logAction(req, { tableName: "reservation", action: "checkin", entityId: reservation.id });
       return res.json(reservation);
     } catch (error: any) {
       return res.status(400).json({ message: error.message ?? "Unable to check in reservation" });

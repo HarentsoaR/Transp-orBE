@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../../config/prisma";
 import { env } from "../../config/env";
 import { AuthUser } from "../../types/auth";
+import { logConnexion } from "../../utils/audit";
 
 type RegisterTravelerInput = {
   email: string;
@@ -84,22 +85,37 @@ export const AuthService = {
     });
 
     if (!user) {
-      await prisma.loginLog
-        .create({
-          data: { success: false, ipAddress: input.ip, userAgent: input.userAgent },
-        })
-        .catch(() => null);
+      await prisma.loginLog.create({
+        data: { success: false, ipAddress: input.ip, userAgent: input.userAgent },
+      }).catch(() => null);
+      await logConnexion({
+        success: false,
+        userId: null,
+        email: input.email,
+        ipAddress: input.ip,
+        userAgent: input.userAgent,
+      });
       throw new Error("Invalid credentials");
     }
 
     const valid = await bcrypt.compare(input.password, user.passwordHash);
-    await prisma.loginLog.create({
-      data: {
-        userId: user.id,
-        success: valid,
-        ipAddress: input.ip,
-        userAgent: input.userAgent,
-      },
+    await prisma.loginLog
+      .create({
+        data: {
+          userId: user.id,
+          success: valid,
+          ipAddress: input.ip,
+          userAgent: input.userAgent,
+        },
+      })
+      .catch(() => null);
+
+    await logConnexion({
+      success: valid,
+      userId: user.id,
+      email: user.email,
+      ipAddress: input.ip,
+      userAgent: input.userAgent,
     });
 
     if (!valid) {

@@ -183,6 +183,45 @@ model LoginLog {
   createdAt DateTime @default(now())
 }
 
+model RevInfo {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  userId    String?
+  ipAddress String?
+  userAgent String?
+  aHistorique AHistorique[]
+
+  @@map("revinfo")
+}
+
+model AConnexion {
+  id        String   @id @default(uuid())
+  userId    String?
+  email     String?
+  ipAddress String?
+  userAgent String?
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  @@map("a_connexion")
+}
+
+model AHistorique {
+  id          String   @id @default(uuid())
+  revId       Int?
+  rev         RevInfo? @relation(fields: [revId], references: [id])
+  userId      String?
+  tableName   String
+  action      String
+  entityId    String?
+  description String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@map("a_historique")
+}
+
 enum DriverStatus {
   ACTIVE
   INACTIVE

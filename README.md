@@ -31,6 +31,13 @@ Pick one:
   npm run seed
   # admin user: admin@transport.local / Admin123!
   ```
+- RBAC profiles (limited scopes for each role):
+  ```bash
+  npx ts-node scripts/seedRbacProfiles.ts
+  # resa@transport.local / Resa123!    (reservations + trips)
+  # trajet@transport.local / Trajet123! (routes/trips/buses/drivers)
+  # logistique@transport.local / Log123! (buses/drivers)
+  ```
 - Full Madagascar sample set (20 trips, 7 buses/drivers, routes, 16-seat fleet):
   ```bash
   npx ts-node scripts/seedMadagascar.ts

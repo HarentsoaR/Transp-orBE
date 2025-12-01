@@ -14,10 +14,22 @@ const auth_1 = require("../../middleware/auth");
 const permissions_1 = require("../../middleware/permissions");
 exports.transportRouter = (0, express_1.Router)();
 const perms = {
-    manageBuses: "transport.buses.manage",
-    manageDrivers: "transport.drivers.manage",
-    manageRoutes: "transport.routes.manage",
-    manageTrips: "transport.trips.manage",
+    busView: "transport.buses.view",
+    busCreate: "transport.buses.create",
+    busUpdate: "transport.buses.update",
+    busDelete: "transport.buses.delete",
+    driverView: "transport.drivers.view",
+    driverCreate: "transport.drivers.create",
+    driverUpdate: "transport.drivers.update",
+    driverDelete: "transport.drivers.delete",
+    routeView: "transport.routes.view",
+    routeCreate: "transport.routes.create",
+    routeUpdate: "transport.routes.update",
+    routeDelete: "transport.routes.delete",
+    tripView: "transport.trips.view",
+    tripCreate: "transport.trips.create",
+    tripUpdate: "transport.trips.update",
+    tripDelete: "transport.trips.delete",
     manageReservations: "transport.reservations.manage",
     driverOps: "driver.operations",
 };
@@ -101,6 +113,7 @@ exports.transportRouter.get("/routes/:id", route_controller_1.RouteController.ge
 exports.transportRouter.get("/trips", trip_controller_1.TripController.search);
 exports.transportRouter.get("/trips/:id/seats", trip_controller_1.TripController.seats);
 exports.transportRouter.get("/trips/:id", trip_controller_1.TripController.get);
+exports.transportRouter.get("/admin/trips", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.tripView]), trip_controller_1.TripController.search);
 // Traveler actions
 exports.transportRouter.post("/reservations", auth_1.authenticate, (0, validate_1.validateBody)(reservationSchema), reservation_controller_1.ReservationController.create);
 exports.transportRouter.get("/reservations/me", auth_1.authenticate, reservation_controller_1.ReservationController.myReservations);
@@ -109,21 +122,22 @@ exports.transportRouter.post("/reservations/:id/cancel", auth_1.authenticate, re
 exports.transportRouter.get("/drivers/:driverId/trips", auth_1.authenticate, trip_controller_1.TripController.byDriver);
 exports.transportRouter.post("/reservations/:id/check-in", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.driverOps]), reservation_controller_1.ReservationController.checkIn);
 // Backoffice/admin endpoints
-exports.transportRouter.post("/admin/buses", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageBuses]), (0, validate_1.validateBody)(busSchema), bus_controller_1.BusController.create);
-exports.transportRouter.get("/admin/buses", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageBuses]), bus_controller_1.BusController.list);
-exports.transportRouter.patch("/admin/buses/:id", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageBuses]), (0, validate_1.validateBody)(busSchema.partial()), bus_controller_1.BusController.update);
-exports.transportRouter.delete("/admin/buses/:id", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageBuses]), bus_controller_1.BusController.remove);
-exports.transportRouter.post("/admin/drivers", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageDrivers]), (0, validate_1.validateBody)(driverSchema), driver_controller_1.DriverController.create);
-exports.transportRouter.get("/admin/drivers", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageDrivers]), driver_controller_1.DriverController.list);
-exports.transportRouter.patch("/admin/drivers/:id", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageDrivers]), (0, validate_1.validateBody)(driverSchema.partial()), driver_controller_1.DriverController.update);
-exports.transportRouter.delete("/admin/drivers/:id", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageDrivers]), driver_controller_1.DriverController.remove);
-exports.transportRouter.post("/admin/routes", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageRoutes]), (0, validate_1.validateBody)(routeSchema), route_controller_1.RouteController.create);
-exports.transportRouter.patch("/admin/routes/:id", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageRoutes]), (0, validate_1.validateBody)(routeSchema.partial()), route_controller_1.RouteController.update);
-exports.transportRouter.delete("/admin/routes/:id", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageRoutes]), route_controller_1.RouteController.remove);
-exports.transportRouter.post("/admin/trips", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageTrips]), (0, validate_1.validateBody)(tripSchema), trip_controller_1.TripController.create);
-exports.transportRouter.patch("/admin/trips/:id", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageTrips]), (0, validate_1.validateBody)(tripSchema.partial()), trip_controller_1.TripController.update);
-exports.transportRouter.delete("/admin/trips/:id", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageTrips]), trip_controller_1.TripController.remove);
-exports.transportRouter.post("/admin/trips/:id/status", auth_1.authenticate, (0, permissions_1.requireAnyPermission)([perms.manageTrips, perms.driverOps]), (0, validate_1.validateBody)(zod_1.z.object({ status: tripSchema.shape.status })), trip_controller_1.TripController.updateStatus);
+exports.transportRouter.post("/admin/buses", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.busCreate]), (0, validate_1.validateBody)(busSchema), bus_controller_1.BusController.create);
+exports.transportRouter.get("/admin/buses", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.busView]), bus_controller_1.BusController.list);
+exports.transportRouter.patch("/admin/buses/:id", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.busUpdate]), (0, validate_1.validateBody)(busSchema.partial()), bus_controller_1.BusController.update);
+exports.transportRouter.delete("/admin/buses/:id", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.busDelete]), bus_controller_1.BusController.remove);
+exports.transportRouter.post("/admin/drivers", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.driverCreate]), (0, validate_1.validateBody)(driverSchema), driver_controller_1.DriverController.create);
+exports.transportRouter.get("/admin/drivers", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.driverView]), driver_controller_1.DriverController.list);
+exports.transportRouter.patch("/admin/drivers/:id", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.driverUpdate]), (0, validate_1.validateBody)(driverSchema.partial()), driver_controller_1.DriverController.update);
+exports.transportRouter.delete("/admin/drivers/:id", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.driverDelete]), driver_controller_1.DriverController.remove);
+exports.transportRouter.post("/admin/routes", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.routeCreate]), (0, validate_1.validateBody)(routeSchema), route_controller_1.RouteController.create);
+exports.transportRouter.patch("/admin/routes/:id", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.routeUpdate]), (0, validate_1.validateBody)(routeSchema.partial()), route_controller_1.RouteController.update);
+exports.transportRouter.delete("/admin/routes/:id", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.routeDelete]), route_controller_1.RouteController.remove);
+exports.transportRouter.get("/admin/routes", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.routeView]), route_controller_1.RouteController.list);
+exports.transportRouter.post("/admin/trips", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.tripCreate]), (0, validate_1.validateBody)(tripSchema), trip_controller_1.TripController.create);
+exports.transportRouter.patch("/admin/trips/:id", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.tripUpdate]), (0, validate_1.validateBody)(tripSchema.partial()), trip_controller_1.TripController.update);
+exports.transportRouter.delete("/admin/trips/:id", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.tripDelete]), trip_controller_1.TripController.remove);
+exports.transportRouter.post("/admin/trips/:id/status", auth_1.authenticate, (0, permissions_1.requireAnyPermission)([perms.tripUpdate, perms.driverOps]), (0, validate_1.validateBody)(zod_1.z.object({ status: tripSchema.shape.status })), trip_controller_1.TripController.updateStatus);
 exports.transportRouter.get("/admin/trips/:tripId/occupancy", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageReservations]), reservation_controller_1.ReservationController.occupancy);
 exports.transportRouter.get("/admin/travelers", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageReservations]), traveler_controller_1.TravelerController.list);
 exports.transportRouter.post("/admin/travelers", auth_1.authenticate, (0, permissions_1.requirePermissions)([perms.manageReservations]), (0, validate_1.validateBody)(travelerSchema), traveler_controller_1.TravelerController.create);

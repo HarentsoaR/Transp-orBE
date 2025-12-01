@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TripController = void 0;
 const trip_service_1 = require("./trip.service");
+const audit_1 = require("../../utils/audit");
 const parseDate = (value) => (value ? new Date(value) : undefined);
 exports.TripController = {
     search: async (req, res) => {
@@ -25,6 +26,7 @@ exports.TripController = {
                 departureTime: parseDate(req.body.departureTime) ?? new Date(),
                 arrivalTime: parseDate(req.body.arrivalTime) ?? null,
             });
+            await (0, audit_1.logAction)(req, { tableName: "trip", action: "create", entityId: trip.id });
             return res.status(201).json(trip);
         }
         catch (error) {
@@ -38,6 +40,7 @@ exports.TripController = {
                 departureTime: parseDate(req.body.departureTime),
                 arrivalTime: parseDate(req.body.arrivalTime),
             });
+            await (0, audit_1.logAction)(req, { tableName: "trip", action: "update", entityId: trip.id });
             return res.json(trip);
         }
         catch (error) {
@@ -47,6 +50,7 @@ exports.TripController = {
     updateStatus: async (req, res) => {
         try {
             const trip = await trip_service_1.TripService.updateStatus(req.params.id, req.body.status);
+            await (0, audit_1.logAction)(req, { tableName: "trip", action: "status", entityId: trip.id, description: req.body.status });
             return res.json(trip);
         }
         catch (error) {
@@ -69,6 +73,7 @@ exports.TripController = {
     remove: async (req, res) => {
         try {
             const trip = await trip_service_1.TripService.remove(req.params.id);
+            await (0, audit_1.logAction)(req, { tableName: "trip", action: "delete", entityId: trip.id });
             return res.json(trip);
         }
         catch (error) {

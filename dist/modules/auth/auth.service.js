@@ -8,6 +8,7 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const prisma_1 = require("../../config/prisma");
 const env_1 = require("../../config/env");
+const audit_1 = require("../../utils/audit");
 const travelerProfileName = "TRAVELER";
 const toAuthUser = (user) => ({
     id: user.id,
@@ -64,21 +65,35 @@ exports.AuthService = {
             },
         });
         if (!user) {
-            await prisma_1.prisma.loginLog
-                .create({
+            await prisma_1.prisma.loginLog.create({
                 data: { success: false, ipAddress: input.ip, userAgent: input.userAgent },
-            })
-                .catch(() => null);
+            }).catch(() => null);
+            await (0, audit_1.logConnexion)({
+                success: false,
+                userId: null,
+                email: input.email,
+                ipAddress: input.ip,
+                userAgent: input.userAgent,
+            });
             throw new Error("Invalid credentials");
         }
         const valid = await bcryptjs_1.default.compare(input.password, user.passwordHash);
-        await prisma_1.prisma.loginLog.create({
+        await prisma_1.prisma.loginLog
+            .create({
             data: {
                 userId: user.id,
                 success: valid,
                 ipAddress: input.ip,
                 userAgent: input.userAgent,
             },
+        })
+            .catch(() => null);
+        await (0, audit_1.logConnexion)({
+            success: valid,
+            userId: user.id,
+            email: user.email,
+            ipAddress: input.ip,
+            userAgent: input.userAgent,
         });
         if (!valid) {
             throw new Error("Invalid credentials");
