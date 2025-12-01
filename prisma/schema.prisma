@@ -1,0 +1,217 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String      @id @default(uuid())
+  email        String      @unique
+  phone        String?
+  passwordHash String
+  firstName    String
+  lastName     String
+  profileId    String?
+  profile      Profile?    @relation(fields: [profileId], references: [id])
+  traveler     Traveler?
+  loginLogs    LoginLog[]
+  auditLogs    AuditLog[]  @relation("AuditActor")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Profile {
+  id          String              @id @default(uuid())
+  name        String              @unique
+  description String?
+  users       User[]
+  permissions ProfilePermission[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model Permission {
+  id          String              @id @default(uuid())
+  code        String              @unique
+  description String?
+  profiles    ProfilePermission[]
+  createdAt   DateTime            @default(now())
+}
+
+model ProfilePermission {
+  profileId    String
+  permissionId String
+  profile      Profile    @relation(fields: [profileId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([profileId, permissionId])
+}
+
+model Traveler {
+  id           String         @id @default(uuid())
+  userId       String?        @unique
+  user         User?          @relation(fields: [userId], references: [id])
+  fullName     String
+  phone        String
+  email        String?
+  nationalId   String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  profession   String?
+  reservations Reservation[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Driver {
+  id            String       @id @default(uuid())
+  firstName     String
+  lastName      String
+  phone         String
+  licenseNumber String
+  status        DriverStatus @default(ACTIVE)
+  assignedBusId String?
+  assignedBus   Bus?         @relation("BusAssignment", fields: [assignedBusId], references: [id])
+  trips         Trip[]       @relation("TripDriver")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Bus {
+  id            String     @id @default(uuid())
+  plateNumber   String     @unique
+  capacity      Int
+  comfortLevel  String?
+  status        BusStatus  @default(ACTIVE)
+  trips         Trip[]
+  drivers       Driver[]   @relation("BusAssignment")
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Route {
+  id                      String   @id @default(uuid())
+  origin                  String
+  destination             String
+  distanceKm              Float?
+  standardDurationMinutes Int?
+  basePrice               Decimal  @db.Decimal(10, 2)
+  isActive                Boolean  @default(true)
+  trips                   Trip[]
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([origin, destination])
+}
+
+model Trip {
+  id             String      @id @default(uuid())
+  routeId        String
+  busId          String
+  driverId       String
+  departureTime  DateTime
+  arrivalTime    DateTime?
+  price          Decimal     @db.Decimal(10, 2)
+  status         TripStatus  @default(SCHEDULED)
+  availableSeats Int
+  notes          String?
+  reservations   Reservation[]
+  route          Route       @relation(fields: [routeId], references: [id])
+  bus            Bus         @relation(fields: [busId], references: [id])
+  driver         Driver      @relation("TripDriver", fields: [driverId], references: [id])
+  reservationSeats ReservationSeat[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Reservation {
+  id         String            @id @default(uuid())
+  tripId     String
+  travelerId String
+  seatNumber Int?
+  status     ReservationStatus @default(CONFIRMED)
+  price      Decimal           @db.Decimal(10, 2)
+  checkIn    CheckInStatus     @default(PENDING)
+  passengerName            String?
+  passengerPhone           String?
+  passengerNationalId      String?
+  emergencyContactName     String?
+  emergencyContactPhone    String?
+  travelerProfession       String?
+  seats      ReservationSeat[]
+  trip       Trip              @relation(fields: [tripId], references: [id])
+  traveler   Traveler          @relation(fields: [travelerId], references: [id])
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@unique([tripId, seatNumber])
+}
+
+model ReservationSeat {
+  id             String   @id @default(uuid())
+  reservationId  String
+  tripId         String
+  seatNumber     Int
+  reservation    Reservation @relation(fields: [reservationId], references: [id])
+  trip           Trip        @relation(fields: [tripId], references: [id])
+
+  @@unique([tripId, seatNumber])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?
+  actor     User?    @relation("AuditActor", fields: [actorId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+}
+
+model LoginLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  ipAddress String?
+  userAgent String?
+  success   Boolean
+  createdAt DateTime @default(now())
+}
+
+enum DriverStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum BusStatus {
+  ACTIVE
+  IN_SERVICE
+  OUT_OF_SERVICE
+  RETIRED
+}
+
+enum TripStatus {
+  SCHEDULED
+  BOARDING
+  DEPARTED
+  ARRIVED
+  CANCELLED
+}
+
+enum ReservationStatus {
+  CONFIRMED
+  CANCELLED
+  NOSHOW
+  COMPLETED
+}
+
+enum CheckInStatus {
+  PENDING
+  BOARDED
+}
