@@ -10,7 +10,9 @@ export const RouteController = {
 
   get: async (req: Request, res: Response) => {
     const route = await RouteService.get(req.params.id);
-    if (!route) return res.status(404).json({ message: "Route not found" });
+    if (!route) {
+      return res.status(404).json({ message: "Route not found", code: "ROUTE_NOT_FOUND" });
+    }
     return res.json(route);
   },
 
@@ -20,7 +22,10 @@ export const RouteController = {
       await logAction(req, { tableName: "route", action: "create", entityId: route.id });
       return res.status(201).json(route);
     } catch (error: any) {
-      return res.status(400).json({ message: error.message ?? "Unable to create route" });
+      return res.status(400).json({
+        message: error.message ?? "Unable to create route",
+        code: "ROUTE_CREATE_FAILED",
+      });
     }
   },
 
@@ -30,7 +35,10 @@ export const RouteController = {
       await logAction(req, { tableName: "route", action: "update", entityId: route.id });
       return res.json(route);
     } catch (error: any) {
-      return res.status(400).json({ message: error.message ?? "Unable to update route" });
+      return res.status(400).json({
+        message: error.message ?? "Unable to update route",
+        code: "ROUTE_UPDATE_FAILED",
+      });
     }
   },
 
@@ -40,7 +48,10 @@ export const RouteController = {
       await logAction(req, { tableName: "route", action: "delete", entityId: route.id });
       return res.json(route);
     } catch (error: any) {
-      return res.status(400).json({ message: error.message ?? "Unable to delete route" });
+      return res.status(400).json({
+        message: error.message ?? "Unable to delete route",
+        code: "ROUTE_DELETE_FAILED",
+      });
     }
   },
 };

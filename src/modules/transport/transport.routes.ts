@@ -6,6 +6,7 @@ import { RouteController } from "./route.controller";
 import { TripController } from "./trip.controller";
 import { ReservationController } from "./reservation.controller";
 import { TravelerController } from "./traveler.controller";
+import { InsightsController } from "./insights.controller";
 import { validateBody } from "../../middleware/validate";
 import { authenticate } from "../../middleware/auth";
 import { requireAnyPermission, requirePermissions } from "../../middleware/permissions";
@@ -36,8 +37,16 @@ const perms = {
 const busSchema = z.object({
   plateNumber: z.string().min(3),
   capacity: z.number().int().positive(),
-  comfortLevel: z.string().optional(),
+  brand: z.string().nullable().optional(),
+  model: z.string().nullable().optional(),
+  year: z.number().int().nullable().optional(),
+  category: z.string().nullable().optional(),
+  comfortLevel: z.string().nullable().optional(),
   status: z.enum(["ACTIVE", "IN_SERVICE", "OUT_OF_SERVICE", "RETIRED"]).optional(),
+  odometer: z.number().int().nonnegative().nullable().optional(),
+  nextMaintenanceAt: z.string().nullable().optional(),
+  insuranceExpiry: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 const driverSchema = z.object({
@@ -45,6 +54,9 @@ const driverSchema = z.object({
   lastName: z.string(),
   phone: z.string(),
   licenseNumber: z.string(),
+  licenseExpiry: z.string().nullable().optional(),
+  rating: z.number().nullable().optional(),
+  notes: z.string().nullable().optional(),
   status: z.enum(["ACTIVE", "INACTIVE", "SUSPENDED"]).optional(),
   assignedBusId: z.string().uuid().optional().nullable(),
 });
@@ -84,11 +96,16 @@ const passengerSchema = z.object({
 const travelerSchema = z.object({
   fullName: z.string(),
   phone: z.string(),
-  email: z.string().email().optional(),
-  nationalId: z.string().optional(),
-  profession: z.string().optional(),
-  emergencyContactName: z.string().optional(),
-  emergencyContactPhone: z.string().optional(),
+  email: z.string().email().nullable().optional(),
+  nationality: z.string().nullable().optional(),
+  docType: z.string().nullable().optional(),
+  nationalId: z.string().nullable().optional(),
+  profession: z.string().nullable().optional(),
+  emergencyContactName: z.string().nullable().optional(),
+  emergencyContactPhone: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  status: z.enum(["ACTIVE", "BLACKLISTED", "INACTIVE"]).optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 const reservationSchema = z
@@ -276,4 +293,11 @@ transportRouter.delete(
   authenticate,
   requirePermissions([perms.manageReservations]),
   TravelerController.remove
+);
+
+transportRouter.get(
+  "/admin/insights",
+  authenticate,
+  requireAnyPermission([perms.busView, perms.driverView, perms.manageReservations]),
+  InsightsController.get
 );

@@ -78,7 +78,15 @@ async function main() {
       prisma.bus.upsert({
         where: { plateNumber: plate },
         update: {},
-        create: { plateNumber: plate, capacity: 16, comfortLevel: idx === 2 ? "VIP" : "Standard" },
+        create: {
+          plateNumber: plate,
+          capacity: 16,
+          comfortLevel: idx === 2 ? "VIP" : "Standard",
+          brand: idx === 1 ? "Hyundai" : "Mercedes",
+          model: idx === 2 ? "Sprinter" : "County",
+          year: 2019 + idx,
+          category: idx === 2 ? "VIP" : "Standard",
+        },
       })
     )
   );
@@ -88,10 +96,19 @@ async function main() {
       { firstName: "Jean", lastName: "Rakoto", phone: "0340000000", licenseNumber: "LIC-0001" },
       { firstName: "Lala", lastName: "Rasoa", phone: "0341111111", licenseNumber: "LIC-0002" },
       { firstName: "Tovo", lastName: "Andry", phone: "0342222222", licenseNumber: "LIC-0003" },
-    ].map((d) =>
+    ].map((d, index) =>
       prisma.driver.create({ data: d }).catch(async () => {
         const existing = await prisma.driver.findFirst({ where: { licenseNumber: d.licenseNumber } });
         return existing!;
+      })
+    )
+  );
+
+  await Promise.all(
+    drivers.map((driver, index) =>
+      prisma.driver.update({
+        where: { id: driver.id },
+        data: { licenseExpiry: new Date(Date.now() + (index + 1) * 120 * 24 * 60 * 60 * 1000) },
       })
     )
   );

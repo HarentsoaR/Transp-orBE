@@ -20,9 +20,7 @@ docker compose up -d   # starts Postgres on 5432 and Elasticsearch on 9200
 ```bash
 cd backend
 npm install
-npx prisma migrate dev --name init
-npx prisma migrate dev --name reservation_seats_single_traveler   # seats table and traveler info
-npx prisma migrate dev --name audit_tables                        # revinfo / a_historique / a_connexion
+npx prisma migrate dev   # applies all migrations (init, reservations, backoffice fields)
 npm run build   # optional, validates TS
 ```
 
@@ -49,6 +47,11 @@ Pick one:
 Start backend:
 ```bash
 npm run dev   # http://localhost:4000
+```
+
+Health check:
+```bash
+npm test   # runs /health check via supertest
 ```
 
 ## 3) Configure & run frontend

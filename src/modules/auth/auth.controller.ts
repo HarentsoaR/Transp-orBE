@@ -7,7 +7,10 @@ export const AuthController = {
       const result = await AuthService.registerTraveler(req.body);
       return res.status(201).json(result);
     } catch (error: any) {
-      return res.status(400).json({ message: error.message ?? "Unable to register traveler" });
+      return res.status(400).json({
+        message: error.message ?? "Unable to register traveler",
+        code: "REGISTER_FAILED",
+      });
     }
   },
 
@@ -20,7 +23,10 @@ export const AuthController = {
       });
       return res.json(result);
     } catch (error: any) {
-      return res.status(401).json({ message: error.message ?? "Unable to login" });
+      return res.status(401).json({
+        message: error.message ?? "Unable to login",
+        code: "LOGIN_FAILED",
+      });
     }
   },
 };

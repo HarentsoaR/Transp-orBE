@@ -5,7 +5,7 @@ export const requirePermissions = (codes: string[]) => {
     const permissions = req.user?.profile?.permissions?.map((p) => p.code) ?? [];
     const hasAll = codes.every((code) => permissions.includes(code));
     if (!hasAll) {
-      return res.status(403).json({ message: "Insufficient permissions" });
+      return res.status(403).json({ message: "Insufficient permissions", code: "FORBIDDEN" });
     }
     return next();
   };
@@ -16,7 +16,7 @@ export const requireAnyPermission = (codes: string[]) => {
     const permissions = req.user?.profile?.permissions?.map((p) => p.code) ?? [];
     const hasOne = codes.some((code) => permissions.includes(code));
     if (!hasOne) {
-      return res.status(403).json({ message: "Insufficient permissions" });
+      return res.status(403).json({ message: "Insufficient permissions", code: "FORBIDDEN" });
     }
     return next();
   };

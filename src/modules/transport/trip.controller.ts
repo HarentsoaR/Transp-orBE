@@ -16,7 +16,7 @@ export const TripController = {
 
   get: async (req: Request, res: Response) => {
     const trip = await TripService.getById(req.params.id);
-    if (!trip) return res.status(404).json({ message: "Trip not found" });
+    if (!trip) return res.status(404).json({ message: "Trip not found", code: "TRIP_NOT_FOUND" });
     return res.json(trip);
   },
 
@@ -30,7 +30,10 @@ export const TripController = {
       await logAction(req, { tableName: "trip", action: "create", entityId: trip.id });
       return res.status(201).json(trip);
     } catch (error: any) {
-      return res.status(400).json({ message: error.message ?? "Unable to create trip" });
+      return res.status(400).json({
+        message: error.message ?? "Unable to create trip",
+        code: "TRIP_CREATE_FAILED",
+      });
     }
   },
 
@@ -44,7 +47,10 @@ export const TripController = {
       await logAction(req, { tableName: "trip", action: "update", entityId: trip.id });
       return res.json(trip);
     } catch (error: any) {
-      return res.status(400).json({ message: error.message ?? "Unable to update trip" });
+      return res.status(400).json({
+        message: error.message ?? "Unable to update trip",
+        code: "TRIP_UPDATE_FAILED",
+      });
     }
   },
 
@@ -54,7 +60,10 @@ export const TripController = {
       await logAction(req, { tableName: "trip", action: "status", entityId: trip.id, description: req.body.status });
       return res.json(trip);
     } catch (error: any) {
-      return res.status(400).json({ message: error.message ?? "Unable to update status" });
+      return res.status(400).json({
+        message: error.message ?? "Unable to update status",
+        code: "TRIP_STATUS_FAILED",
+      });
     }
   },
 
@@ -68,7 +77,10 @@ export const TripController = {
       const seats = await TripService.seats(req.params.id);
       return res.json(seats);
     } catch (error: any) {
-      return res.status(400).json({ message: error.message ?? "Unable to load seats" });
+      return res.status(400).json({
+        message: error.message ?? "Unable to load seats",
+        code: "TRIP_SEATS_FAILED",
+      });
     }
   },
 
@@ -78,7 +90,10 @@ export const TripController = {
       await logAction(req, { tableName: "trip", action: "delete", entityId: trip.id });
       return res.json(trip);
     } catch (error: any) {
-      return res.status(400).json({ message: error.message ?? "Unable to delete trip" });
+      return res.status(400).json({
+        message: error.message ?? "Unable to delete trip",
+        code: "TRIP_DELETE_FAILED",
+      });
     }
   },
 };

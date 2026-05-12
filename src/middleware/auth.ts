@@ -9,7 +9,10 @@ type TokenPayload = { userId: string };
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Missing or invalid authorization header" });
+    return res.status(401).json({
+      message: "Missing or invalid authorization header",
+      code: "AUTH_HEADER_MISSING",
+    });
   }
 
   const token = authHeader.substring("Bearer ".length);
@@ -27,7 +30,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     });
 
     if (!user) {
-      return res.status(401).json({ message: "User not found" });
+      return res.status(401).json({ message: "User not found", code: "USER_NOT_FOUND" });
     }
 
     const authUser: AuthUser = {
@@ -47,6 +50,6 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     req.user = authUser;
     return next();
   } catch (error) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    return res.status(401).json({ message: "Invalid or expired token", code: "INVALID_TOKEN" });
   }
 };

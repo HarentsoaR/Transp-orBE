@@ -9,12 +9,17 @@ export const ReservationController = {
       await logAction(req, { tableName: "reservation", action: "create", entityId: (reservation as any)?.id });
       return res.status(201).json(reservation);
     } catch (error: any) {
-      return res.status(400).json({ message: error.message ?? "Unable to create reservation" });
+      return res.status(400).json({
+        message: error.message ?? "Unable to create reservation",
+        code: "RESERVATION_CREATE_FAILED",
+      });
     }
   },
 
   myReservations: async (req: Request, res: Response) => {
-    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized", code: "UNAUTHORIZED" });
+    }
     const reservations = await ReservationService.listForTraveler(req.user.id);
     return res.json(reservations);
   },
@@ -25,7 +30,10 @@ export const ReservationController = {
       await logAction(req, { tableName: "reservation", action: "cancel", entityId: reservation.id });
       return res.json(reservation);
     } catch (error: any) {
-      return res.status(400).json({ message: error.message ?? "Unable to cancel reservation" });
+      return res.status(400).json({
+        message: error.message ?? "Unable to cancel reservation",
+        code: "RESERVATION_CANCEL_FAILED",
+      });
     }
   },
 
@@ -35,7 +43,10 @@ export const ReservationController = {
       await logAction(req, { tableName: "reservation", action: "checkin", entityId: reservation.id });
       return res.json(reservation);
     } catch (error: any) {
-      return res.status(400).json({ message: error.message ?? "Unable to check in reservation" });
+      return res.status(400).json({
+        message: error.message ?? "Unable to check in reservation",
+        code: "RESERVATION_CHECKIN_FAILED",
+      });
     }
   },
 
